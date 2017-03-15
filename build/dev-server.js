@@ -1,40 +1,38 @@
-var path = require('path')
-var fs = require('fs')
+var path = require('path');//导入Path，用于处理目录
+var fs = require('fs');//导入FS，I/O
 var argv = require('optimist').argv;
-var express = require('express')
-var webpack = require('webpack')
-var config = require('../config')
-var opn = require('opn')
-var proxyMiddleware = require('http-proxy-middleware')
-var webpackConfig = process.env.NODE_ENV === 'testing'
-  ? require('./webpack.prod.conf')
-  : require('./webpack.dev.conf')
-
+var express = require('express');//导入Express，web应用框架
+var webpack = require('webpack');//导入Webpack，打包工具
+var config = require('../config');//导入配置
+var opn = require('opn');//opn模块去打开浏览器
+var proxyMiddleware = require('http-proxy-middleware');//导入代理中间件
+var webpackConfig = process.env.NODE_ENV === 'testing' ? require('./webpack.prod.conf') : require('./webpack.dev.conf');
+console.info(webpackConfig);
 // default port where dev server listens for incoming traffic
-var port = process.env.PORT || config.dev.port
+var port = process.env.PORT || config.dev.port;
 // Define HTTP proxies to your custom API backend
 // https://github.com/chimurai/http-proxy-middleware
-var proxyTable = config.dev.proxyTable
+var proxyTable = config.dev.proxyTable;
 
-var app = express()
-var compiler = webpack(webpackConfig)
+var app = express();
+var compiler = webpack(webpackConfig);
 
 var devMiddleware = require('webpack-dev-middleware')(compiler, {
-  publicPath: webpackConfig.output.publicPath,
-  stats: {
-    colors: true,
-    chunks: false
-  }
+    publicPath: webpackConfig.output.publicPath,
+    stats: {
+        colors: true,
+        chunks: false
+    }
 })
 
 var hotMiddleware = require('webpack-hot-middleware')(compiler)
 // force page reload when html-webpack-plugin template changes
 compiler.plugin('compilation', function (compilation) {
-  compilation.plugin('html-webpack-plugin-after-emit', function (data, cb) {
-    hotMiddleware.publish({ action: 'reload' })
-    cb()
-  })
-})
+    compilation.plugin('html-webpack-plugin-after-emit', function (data, cb) {
+        hotMiddleware.publish({action: 'reload'});
+        cb()
+    })
+});
 
 // proxy api requests
 // Object.keys(proxyTable).forEach(function (context) {
@@ -48,23 +46,23 @@ compiler.plugin('compilation', function (compilation) {
 // mock/proxy api requests
 var mockDir = path.resolve(__dirname, '../mock');
 (function setMock(mockDir) {
-  fs.readdirSync(mockDir).forEach(function (file) {
-    var filePath = path.resolve(mockDir, file);
-    var mock;
-    if (fs.statSync(filePath).isDirectory()) {
-      setMock(filePath);
-    }
-    else {
-      mock = require(filePath);
-      app.use(mock.api, argv.proxy ? proxyMiddleware({target: 'http://' + argv.proxy}) : mock.response);
-    }
-  });
-})(mockDir);;
+    fs.readdirSync(mockDir).forEach(function (file) {
+        var filePath = path.resolve(mockDir, file);
+        var mock;
+        if (fs.statSync(filePath).isDirectory()) {
+            setMock(filePath);
+        }
+        else {
+            mock = require(filePath);
+            app.use(mock.api, argv.proxy ? proxyMiddleware({target: 'http://' + argv.proxy}) : mock.response);
+        }
+    });
+})(mockDir);
 
 // handle fallback for HTML5 history API
 app.use(require('connect-history-api-fallback')({
-  index: '/index.html'
-}))
+    index: '/index.html'
+}));
 
 // serve webpack bundle output
 app.use(devMiddleware)
@@ -78,11 +76,11 @@ var staticPath = path.posix.join(config.dev.assetsPublicPath, config.dev.assetsS
 app.use(staticPath, express.static('./static'))
 
 module.exports = app.listen(port, function (err) {
-  if (err) {
-    console.log(err)
-    return
-  }
-  var uri = 'http://localhost:' + port
-  console.log('Dev server listening at ' + uri + '\n')
-  // opn(uri)
+    if (err) {
+        console.log(err)
+        return
+    }
+    var uri = 'http://localhost:' + port
+    console.log('Dev server listening at ' + uri + '\n')
+    // opn(uri)
 })

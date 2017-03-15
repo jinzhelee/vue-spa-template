@@ -21,6 +21,7 @@
     },
     methods: {
       async getContent () {
+          alert("hello");
         const response = await fetch('/api/hello');
         this.content = await response.text();
       }
